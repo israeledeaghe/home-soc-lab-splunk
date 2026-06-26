@@ -1,0 +1,28 @@
+# Detection 6: Process Injection (Anomalous Process Lineage)
+# MITRE ATT&CK: T1055 - Process Injection
+# Severity: Medium
+# Validated against: Atomic Red Team T1055-5 (Read-Write-Execute injection)
+#
+# Description: Detects process injection via anomalous parent-child process
+# relationships rather than direct API-call monitoring.
+#
+# Real-World Finding: Atomic Red Team Tests T1055-9 and T1055-10 (classic
+# CreateRemoteThread-based injection) FAILED with "Access Denied" on this
+# Windows 11 build, even with Defender fully disabled and full Administrator
+# privileges confirmed. This points to modern Windows 11 process mitigation
+# policies blocking the most common injection technique by default - a
+# genuine finding worth further research. Test 5 (a different injection
+# primitive) succeeded and is what this detection is built around.
+#
+# Known Limitation: This detection uses filename-pattern matching
+# (Atomic/Inject/RWX/Vuln) which is lab-specific - a real attacker would not
+# name their tool this way. Production version needs broader unsigned-binary
+# or behavioral heuristics, and ideally Sysmon Event ID 10 (ProcessAccess)
+# monitoring for PROCESS_VM_READ-equivalent access rights against any process.
+
+index=main sourcetype=xmlwineventlog "ParentImage" "powershell.exe"
+| rex field=_raw "Name='ParentImage'>(?<ParentImage>[^<]+)<"
+| rex field=_raw "Name='CommandLine'>(?<CommandLine>[^<]+)<"
+| rex field=_raw "Name='Image'>(?<Image>[^<]+)<"
+| where match(ParentImage, "(?i)\\\\(Atomic|Inject|RWX|Vuln)")
+| table _time, host, ParentImage, Image, CommandLine

@@ -1,0 +1,22 @@
+# Detection 7: Download Cradle / Fileless Script Execution (Privilege Escalation)
+# MITRE ATT&CK: T1134.001 - Access Token Manipulation: Token Impersonation/Theft
+# Severity: High
+# Validated against: Atomic Red Team T1134.001-2 (Empire Get-System module)
+#
+# Description: Detects the PowerShell "download cradle" pattern (IEX combined
+# with a web-download cmdlet) used for fileless malware delivery. Generalized
+# to catch this pattern regardless of source URL or specific payload - not
+# limited to this one test, applicable to most fileless PowerShell malware
+# delivery including Cobalt Strike, Metasploit web_delivery, and custom loaders.
+#
+# False Positive Notes: High confidence. Legitimate admin scripts rarely
+# combine IEX with a remote download in this exact pattern. If false positives
+# occur, they are typically from legitimate software installers using a
+# similar bootstrap pattern - worth an allowlist of known installer URLs.
+
+index=main sourcetype=xmlwineventlog "powershell.exe"
+| rex field=_raw "Name='CommandLine'>(?<CommandLine>[^<]+)<"
+| rex field=_raw "Name='User'>(?<User>[^<]+)<"
+| rex field=_raw "Name='ParentImage'>(?<ParentImage>[^<]+)<"
+| where match(CommandLine, "(?i)(IEX\s*\(|Invoke-Expression).*?(IWR|Invoke-WebRequest|Net\.WebClient|DownloadString)")
+| table _time, host, User, ParentImage, CommandLine

@@ -1,0 +1,19 @@
+# Detection 1: Suspicious PowerShell Encoded Command
+# MITRE ATT&CK: T1059.001 - Command and Scripting Interpreter: PowerShell
+# Severity: Medium
+# Validated against: Atomic Red Team T1059.001-15
+#
+# Description: Detects PowerShell execution using the -EncodedCommand/-enc
+# flag, a common technique for obfuscating malicious commands and evading
+# simple string-based antivirus signatures.
+#
+# False Positive Notes: Legitimate admin scripts occasionally use -enc for
+# passing complex arguments. Tune by allowlisting known script hashes
+# (Sysmon Hashes field) once normal activity is baselined.
+
+index=main sourcetype=xmlwineventlog "Microsoft-Windows-Sysmon" "powershell.exe"
+| rex field=_raw "Name='CommandLine'>(?<CommandLine>[^<]+)<"
+| rex field=_raw "Name='User'>(?<User>[^<]+)<"
+| rex field=_raw "Name='ParentImage'>(?<ParentImage>[^<]+)<"
+| regex CommandLine="(?i)(-enc\b|-encodedcommand|-e\s+[A-Za-z0-9+/=]{20,})"
+| table _time, host, User, ParentImage, CommandLine

@@ -1,0 +1,15 @@
+# Detection 5: Scheduled Task Creation
+# MITRE ATT&CK: T1053.005 - Scheduled Task/Job: Scheduled Task
+# Severity: Medium
+# Validated against: Atomic Red Team T1053.005-2
+#
+# Description: Detects new scheduled task creation via Security Event 4698 -
+# the second most common persistence mechanism after Registry Run Keys.
+#
+# Real-World Gotcha Found: Event 4698 is NOT logged by default on a fresh
+# Windows install - requires enabling "Other Object Access Events" in
+# Advanced Audit Policy Configuration. This is a real, common gap worth
+# checking on any new SOC deployment before assuming this telemetry exists.
+
+index=main sourcetype="WinEventLog:Security" EventCode=4698
+| table _time, host, Account_Name, Task_Name, Task_Content

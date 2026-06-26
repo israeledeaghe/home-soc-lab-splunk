@@ -1,0 +1,24 @@
+# Detection 3: Lateral Movement via SMB Admin Shares
+# MITRE ATT&CK: T1021.002 - Remote Services: SMB/Windows Admin Shares
+# Severity: High
+# Validated against: Manual lateral movement test between two cloned VMs
+#
+# Description: Detects remote access to hidden administrative shares
+# (C$, ADMIN$, IPC$) via Security Event 5140. This is the core mechanism
+# behind tools like PsExec and most real-world lateral movement using
+# stolen or shared local credentials.
+#
+# Real-World Gotchas Found:
+# 1. Windows applies UAC remote restrictions to local accounts by default -
+#    LocalAccountTokenFilterPolicy registry key must be set to 1 for admin
+#    share access to succeed at all over the network with local accounts.
+# 2. Event 5140 is NOT logged by default - requires enabling the
+#    "File Share" Advanced Audit Policy subcategory.
+#
+# False Positive Notes: Legitimate backup agents, RMM tools, and patch
+# management software also access these shares. Production deployment
+# should allowlist known management server source IPs.
+
+index=main sourcetype="WinEventLog:Security" EventCode=5140
+| search Share_Name="*C$*" OR Share_Name="*ADMIN$*"
+| table _time, ComputerName, Account_Name, Source_Address, Share_Name

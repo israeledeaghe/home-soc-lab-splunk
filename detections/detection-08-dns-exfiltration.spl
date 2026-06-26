@@ -1,0 +1,26 @@
+# Detection 8: DNS Exfiltration via DNSExfiltrator/DoH
+# MITRE ATT&CK: T1048 - Exfiltration Over Alternative Protocol
+# Severity: High
+# Validated against: Atomic Red Team T1048-3
+#
+# Description: Detects DNS-based data exfiltration attempts using the
+# DNSExfiltrator tool over DNS-over-HTTPS (DoH). DNS exfiltration is one of
+# the hardest data-loss techniques to block at the network perimeter since
+# DNS traffic is almost universally permitted outbound, and DoH specifically
+# encrypts the DNS resolution itself, defeating plaintext DNS monitoring.
+#
+# Lab Note: Test failed at the network layer (target.example.com has no
+# real attacker-controlled DNS infrastructure) but command-line telemetry
+# confirms detection logic fires correctly on attempt alone - the actual
+# security-relevant signal, since a real attacker's infrastructure would
+# complete the exfil using an identical command-line signature.
+#
+# Known Limitation: Relies on command-line/tool-name matching. A more robust
+# production detection should monitor DNS query volume/entropy per host as
+# a technique-level (not tool-specific) behavioral signature.
+
+index=main sourcetype=xmlwineventlog "powershell.exe"
+| rex field=_raw "Name='CommandLine'>(?<CommandLine>[^<]+)<"
+| rex field=_raw "Name='User'>(?<User>[^<]+)<"
+| where match(CommandLine, "(?i)(DNSExfiltrator|Invoke-DNSExfiltrator|-doh\s+\w+.*-d\s+\S+\.\S+)")
+| table _time, host, User, CommandLine

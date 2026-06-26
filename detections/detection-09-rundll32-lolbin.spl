@@ -1,0 +1,23 @@
+# Detection 9: LOLBin Abuse via Rundll32
+# MITRE ATT&CK: T1218.011 - System Binary Proxy Execution: Rundll32
+# Severity: Medium
+# Validated against: Atomic Red Team T1218.011-9 (pcwutl.dll LaunchApplication)
+#
+# Description: Detects rundll32.exe being used to proxy execution of
+# arbitrary applications via legitimate DLL exports not intended for this
+# purpose. Generalized to cover multiple known LOLBin DLLs in one query
+# (pcwutl, syssetup, advpack, setupapi, ieadvpack), not just the one
+# specific variant tested.
+#
+# False Positive Notes: rundll32.exe has many legitimate uses; the specific
+# DLL/export combinations checked here are well-known abuse patterns, but
+# production deployment would benefit from an allowlist of known-legitimate
+# parent processes/contexts (e.g., Control Panel applets routinely use
+# rundll32 with shell32.dll, which is intentionally NOT included here).
+
+index=main sourcetype=xmlwineventlog "rundll32.exe"
+| rex field=_raw "Name='CommandLine'>(?<CommandLine>[^<]+)<"
+| rex field=_raw "Name='User'>(?<User>[^<]+)<"
+| rex field=_raw "Name='ParentImage'>(?<ParentImage>[^<]+)<"
+| where match(CommandLine, "(?i)(pcwutl\.dll|syssetup\.dll|advpack\.dll|setupapi\.dll|ieadvpack\.dll|LaunchApplication)")
+| table _time, host, User, ParentImage, CommandLine

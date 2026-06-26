@@ -1,0 +1,20 @@
+# Detection 2: LSASS Memory Dump via comsvcs.dll
+# MITRE ATT&CK: T1003.001 - OS Credential Dumping: LSASS Memory
+# Severity: High
+# Validated against: Atomic Red Team T1003.001-2
+#
+# Description: Detects credential dumping via rundll32.exe invoking
+# comsvcs.dll's MiniDump export against lsass.exe - a living-off-the-land
+# technique functionally equivalent to Mimikatz's LSASS dumping, using only
+# legitimate, signed Windows binaries already present on every host.
+#
+# False Positive Notes: No legitimate administrative reason exists for this
+# exact combination (comsvcs.dll + MiniDump + lsass). High confidence, low
+# noise detection.
+
+index=main sourcetype=xmlwineventlog "comsvcs.dll"
+| rex field=_raw "Name='CommandLine'>(?<CommandLine>[^<]+)<"
+| rex field=_raw "Name='User'>(?<User>[^<]+)<"
+| rex field=_raw "Name='ParentImage'>(?<ParentImage>[^<]+)<"
+| search CommandLine="*MiniDump*" CommandLine="*lsass*"
+| table _time, host, User, ParentImage, CommandLine

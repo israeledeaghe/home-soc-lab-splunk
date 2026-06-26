@@ -1,0 +1,21 @@
+# Detection 4: Registry Run Key Persistence
+# MITRE ATT&CK: T1547.001 - Boot or Logon Autostart Execution: Registry Run Keys
+# Severity: Medium
+# Validated against: Atomic Red Team T1547.001-1
+#
+# Description: Detects new entries written to CurrentVersion\Run registry
+# keys via Sysmon Event ID 13 (Registry Value Set) - the most common
+# persistence mechanism used by real-world malware.
+#
+# False Positive Notes: TUNED based on a real false positive observed in
+# this lab - Microsoft Edge legitimately creates its own Run key entry
+# (MicrosoftEdgeAutoLaunch_*) for browser auto-launch. Filtered out below
+# along with Chrome and OneDrive's equivalent entries.
+
+index=main sourcetype=xmlwineventlog "EventID>13<" "CurrentVersion\\Run"
+| rex field=_raw "Name='Image'>(?<Image>[^<]+)<"
+| rex field=_raw "Name='TargetObject'>(?<TargetObject>[^<]+)<"
+| rex field=_raw "Name='Details'>(?<Details>[^<]+)<"
+| rex field=_raw "Name='User'>(?<User>[^<]+)<"
+| where NOT match(Image, "(?i)msedge\.exe|chrome\.exe|onedrive\.exe")
+| table _time, host, User, Image, TargetObject, Details
