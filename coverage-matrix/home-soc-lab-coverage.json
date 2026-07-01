@@ -1,0 +1,245 @@
+{
+	"name": "Home SOC Lab - Splunk Detection Coverage",
+	"versions": {
+		"attack": "19",
+		"navigator": "5.3.2",
+		"layer": "4.5"
+	},
+	"domain": "enterprise-attack",
+	"description": "MITRE ATT&CK detection coverage for a Splunk-based home SOC lab. Green (score 100) = detection built, tested, and validated against Atomic Red Team. Yellow (score 50) = planned next-priority detection. Grey = no coverage. Built by Israel Ehiabhi Edeaghe.",
+	"filters": {
+		"platforms": [
+			"Windows"
+		]
+	},
+	"sorting": 0,
+	"layout": {
+		"layout": "side",
+		"aggregateFunction": "average",
+		"showID": true,
+		"showName": true,
+		"showAggregateScores": false,
+		"countUnscored": false,
+		"expandedSubtechniques": "none"
+	},
+	"hideDisabled": false,
+	"techniques": [
+		{
+			"techniqueID": "T1059.001",
+			"tactic": "execution",
+			"score": 100,
+			"color": "",
+			"comment": "Detection 1: Suspicious PowerShell Encoded Command. Validated vs Atomic Red Team T1059.001-15. Sysmon EventID 1 command-line regex match on -enc/-encodedcommand flags. Severity: Medium.",
+			"enabled": true,
+			"metadata": [],
+			"links": [],
+			"showSubtechniques": false
+		},
+		{
+			"techniqueID": "T1003.001",
+			"tactic": "credential-access",
+			"score": 100,
+			"color": "",
+			"comment": "Detection 2: LSASS Memory Dump via comsvcs.dll. Validated vs Atomic Red Team T1003.001-2. Sysmon EventID 1 command-line match on rundll32+comsvcs+MiniDump+lsass. Living-off-the-land Mimikatz equivalent. Severity: High.",
+			"enabled": true,
+			"metadata": [],
+			"links": [],
+			"showSubtechniques": false
+		},
+		{
+			"techniqueID": "T1021.002",
+			"tactic": "lateral-movement",
+			"score": 100,
+			"color": "",
+			"comment": "Detection 3: Lateral Movement via SMB Admin Shares. Validated via manual two-VM test. Security Event 5140. Required enabling Advanced Audit Policy File Share subcategory and LocalAccountTokenFilterPolicy fix. Severity: High.",
+			"enabled": true,
+			"metadata": [],
+			"links": [],
+			"showSubtechniques": false
+		},
+		{
+			"techniqueID": "T1547.001",
+			"tactic": "persistence",
+			"score": 100,
+			"color": "",
+			"comment": "Detection 4: Registry Run Key Persistence. Validated vs Atomic Red Team T1547.001-1. Sysmon EventID 13 (Registry Value Set). Tuned against real Microsoft Edge false positive observed in lab. Severity: Medium.",
+			"enabled": true,
+			"metadata": [],
+			"links": [],
+			"showSubtechniques": false
+		},
+		{
+			"techniqueID": "T1053.005",
+			"tactic": "persistence",
+			"score": 100,
+			"color": "",
+			"comment": "Detection 5: Scheduled Task Creation. Validated vs Atomic Red Team T1053.005-2. Security Event 4698. Required enabling Advanced Audit Policy Other Object Access Events - not logged by default on fresh Windows install. Severity: Medium.",
+			"enabled": true,
+			"metadata": [],
+			"links": [],
+			"showSubtechniques": false
+		},
+		{
+			"techniqueID": "T1055.001",
+			"tactic": "defense-evasion",
+			"score": 100,
+			"color": "",
+			"comment": "Detection 6: Process Injection via anomalous process lineage (RWX DLL injection). Validated vs Atomic Red Team T1055-5. Note: classic CreateRemoteThread (T1055.003) was blocked by Windows 11 process mitigations even with full admin and Defender disabled - a genuine OS-level finding documented in Investigation 4. Severity: Medium.",
+			"enabled": true,
+			"metadata": [],
+			"links": [],
+			"showSubtechniques": false
+		},
+		{
+			"techniqueID": "T1134.001",
+			"tactic": "privilege-escalation",
+			"score": 100,
+			"color": "",
+			"comment": "Detection 7: Download Cradle / Fileless Privilege Escalation. Validated vs Atomic Red Team T1134.001-2 (Empire BC-SECURITY Get-System.ps1). IEX+IWR pattern detection. Generalized to catch any fileless PowerShell download cradle, not just this specific Empire module. Severity: High.",
+			"enabled": true,
+			"metadata": [],
+			"links": [],
+			"showSubtechniques": false
+		},
+		{
+			"techniqueID": "T1048.003",
+			"tactic": "exfiltration",
+			"score": 100,
+			"color": "",
+			"comment": "Detection 8: DNS Exfiltration via DNSExfiltrator using DNS-over-HTTPS. Validated vs Atomic Red Team T1048-3. Command-line signature detection on tool invocation. Exfil failed at network layer (no real C2 domain) but detection fires correctly on attempt - the security-relevant signal. Severity: High.",
+			"enabled": true,
+			"metadata": [],
+			"links": [],
+			"showSubtechniques": false
+		},
+		{
+			"techniqueID": "T1218.011",
+			"tactic": "defense-evasion",
+			"score": 100,
+			"color": "",
+			"comment": "Detection 9: LOLBin Abuse via Rundll32. Validated vs Atomic Red Team T1218.011-9 (pcwutl.dll LaunchApplication). Generalized to cover multiple known LOLBin DLLs (pcwutl, syssetup, advpack, setupapi, ieadvpack) in one query. Severity: Medium.",
+			"enabled": true,
+			"metadata": [],
+			"links": [],
+			"showSubtechniques": false
+		},
+		{
+			"techniqueID": "T1566.001",
+			"tactic": "initial-access",
+			"score": 50,
+			"color": "",
+			"comment": "PLANNED: Detect initial access via malicious email attachment. High real-world frequency. Would detect via Sysmon process creation from email client parent processes (Outlook spawning PowerShell/cmd). No new infrastructure needed - same Sysmon EventID 1 telemetry already flowing.",
+			"enabled": true,
+			"metadata": [],
+			"links": [],
+			"showSubtechniques": false
+		},
+		{
+			"techniqueID": "T1078.003",
+			"tactic": "lateral-movement",
+			"score": 50,
+			"color": "",
+			"comment": "PLANNED: Detect attacker use of local account credentials. Directly observed in Investigation 2 (lateral movement using socadmin local account across two VMs). Detect via Security Event 4624 logon Type 3 from unexpected source addresses. Builds on existing Security log pipeline.",
+			"enabled": true,
+			"metadata": [],
+			"links": [],
+			"showSubtechniques": false
+		},
+		{
+			"techniqueID": "T1110.001",
+			"tactic": "credential-access",
+			"score": 50,
+			"color": "",
+			"comment": "PLANNED: Password brute force detection via Security Event 4625 (failed logon) spike analysis. High-value, low-complexity SPL correlation. Builds directly on existing Security log pipeline - no new telemetry needed.",
+			"enabled": true,
+			"metadata": [],
+			"links": [],
+			"showSubtechniques": false
+		},
+		{
+			"techniqueID": "T1027.010",
+			"tactic": "defense-evasion",
+			"score": 50,
+			"color": "",
+			"comment": "PLANNED: Command obfuscation detection beyond encoded commands. Extends Detection 1 (T1059.001 encoded PowerShell) to cover string concatenation, character substitution, and other obfuscation patterns. Same Sysmon EventID 1 telemetry, broader regex patterns needed.",
+			"enabled": true,
+			"metadata": [],
+			"links": [],
+			"showSubtechniques": false
+		},
+		{
+			"techniqueID": "T1562.001",
+			"tactic": "defense-evasion",
+			"score": 50,
+			"color": "",
+			"comment": "PLANNED: Detect attempts to disable security tools (Defender, Sysmon, audit logging). Security Event 4719 (audit policy changed) + Sysmon service stop events. Critical gap - an attacker who disables Sysmon defeats the entire lab telemetry pipeline.",
+			"enabled": true,
+			"metadata": [],
+			"links": [],
+			"showSubtechniques": false
+		},
+		{
+			"techniqueID": "T1685.005",
+			"tactic": "defense-impairment",
+			"score": 50,
+			"color": "",
+			"comment": "PLANNED: Detect Windows Event Log clearing via Security Event 1102 (Security log cleared) and System Event 104 (any log cleared). Simple, high-value detection - log clearing is almost always malicious. Directly relevant since an attacker clearing logs defeats the Splunk pipeline.",
+			"enabled": true,
+			"metadata": [],
+			"links": [],
+			"showSubtechniques": false
+		},
+		{
+			"techniqueID": "T1003.002",
+			"tactic": "credential-access",
+			"score": 50,
+			"color": "",
+			"comment": "PLANNED: SAM database credential dumping. Natural extension of Detection 2 (LSASS dumping). Detectable via Sysmon registry access to HKLM\\SAM. Same credential-access tactic, different technique - coverage of both strengthens the tactic-level posture.",
+			"enabled": true,
+			"metadata": [],
+			"links": [],
+			"showSubtechniques": false
+		},
+		{
+			"techniqueID": "T1105",
+			"tactic": "command-and-control",
+			"score": 50,
+			"color": "",
+			"comment": "PLANNED: Detect tool download to endpoint (certutil, bitsadmin, PowerShell IWR/WebClient downloading executables). Extends existing Detection 7 download cradle logic to cover non-IEX delivery methods. Same Sysmon EventID 1 telemetry, different command-line patterns.",
+			"enabled": true,
+			"metadata": [],
+			"links": [],
+			"showSubtechniques": false
+		}
+	],
+	"gradient": {
+		"colors": [
+			"#ccccccff",
+			"#f5c518ff",
+			"#5cb85cff"
+		],
+		"minValue": 0,
+		"maxValue": 100
+	},
+	"legendItems": [
+		{
+			"label": "Built & Tested (score 100)",
+			"color": "#5cb85c"
+		},
+		{
+			"label": "Planned Next Priority (score 50)",
+			"color": "#f5c518"
+		},
+		{
+			"label": "No Coverage",
+			"color": "#cccccc"
+		}
+	],
+	"metadata": [],
+	"links": [],
+	"showTacticRowBackground": false,
+	"tacticRowBackground": "#dddddd",
+	"selectTechniquesAcrossTactics": true,
+	"selectSubtechniquesWithParent": false,
+	"selectVisibleTechniques": false
+}
